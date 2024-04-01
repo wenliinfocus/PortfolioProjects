@@ -8,6 +8,42 @@ SELECT * from subject;  -- 6,771
 SELECT * from work;  -- 14,776
 
 
+-- 1.) Fetch all the paintings which are not displayed on any museums?
+SELECT *
+FROM work
+WHERE museum_id IS NULL;
+
+
+-- 2.) Are there museums without any paintings?
+SELECT *
+FROM museum as m
+LEFT JOIN work as w
+ON m.museum_id=w.museum_id
+WHERE w.work_id IS NULL;
+
+
+-- 3.) How many paintings have an asking price of more than their regular price?
+SELECT *
+FROM product_size
+WHERE sale_price > regular_price;
+
+
+-- 4.) Identify the paintings whose asking price is less than 50% of its regular price
+SELECT *
+FROM product_size
+WHERE sale_price < (regular_price*0.5);
+
+
+-- 5.) Which canva size costs the most?
+SELECT TOP 1
+cs.label, pd.sale_price
+FROM canvas_size as cs
+JOIN product_size as pd
+ON cs.size_id=pd.size_id
+GROUP BY cs.label, pd.sale_price
+ORDER BY MAX(pd.sale_price) DESC;
+
+
 -- 10.) Identify the museums which are open on both Sunday and Monday. Display museum name, city.
 SELECT m.name as museum_name, m.city
 from museum_hours mh1
