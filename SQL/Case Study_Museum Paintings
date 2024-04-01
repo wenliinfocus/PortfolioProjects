@@ -1,0 +1,31 @@
+SELECT * from artist; -- 421
+SELECT * from canvas_size;  -- 200
+SELECT * from image_link;  -- 14,775
+SELECT * from museum_hours;  -- 351
+SELECT * from museum;  -- 57
+SELECT * from product_size;  -- 110,347
+SELECT * from subject;  -- 6,771
+SELECT * from work;  -- 14,776
+
+
+-- 10. Identify the museums which are open on both Sunday and Monday. Display museum name, city.
+SELECT m.name as museum_name, m.city
+from museum_hours mh1
+join museum m on m.museum_id = mh1.museum_id
+WHERE day = 'Sunday' 
+and exists (select 1 from museum_hours mh2
+			where mh2.museum_id = mh1.museum_id
+			and mh2.day = 'Monday');
+
+
+-- 15. Which museum is open for the longest during a day. Dispay museum name, state and hours open and which day?
+SELECT TOP 1
+m.name as museum_name, m.state, mh.day,
+DATEDIFF(minute, open_time, close_time) as duration_min,
+RANK() OVER (ORDER BY DATEDIFF(minute, open_time, close_time)/60 DESC) as duration_hr_rank
+from museum_hours mh
+JOIN museum m on m.museum_id=mh.museum_id
+ORDER BY duration_hr_rank;
+
+EXEC sp_rename 'museum_hours.open', 'open_time';  -- rename the open time
+EXEC sp_rename 'museum_hours.close', 'close_time';  -- rename the closing time
