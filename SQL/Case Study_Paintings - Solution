@@ -125,6 +125,43 @@ EXEC sp_rename 'museum_hours.open', 'open_time';  -- rename the open time
 EXEC sp_rename 'museum_hours.close', 'close_time';  -- rename the closing time
 
 
+-- 16.) Which museum has the most no of most popular painting style?
+WITH pop_style as
+	(SELECT w.style, count (1) as no_of_painting,
+	RANK () OVER (ORDER BY count (1) DESC) as ranking
+	from work as w
+	GROUP BY w.style),
+	cte as (
+		SELECT w.museum_id, m.name as museum_name, ps.style, count (1) as no_of_painting,
+		RANK () OVER (ORDER BY count (1) DESC) as ranking
+		from work as w
+		JOIN museum as m ON w.museum_id=m.museum_id
+		JOIN pop_style as ps ON w.style=ps.style
+		GROUP BY w.museum_id, m.name, ps.style)
+SELECT TOP 1
+museum_name, style, no_of_painting
+FROM cte;
+
+SELECT TOP 1 m.name as museum_name, w.style, count (1) as no_of_painting,
+RANK () OVER (ORDER BY count (1) DESC) as ranking
+from work as w
+JOIN museum as m ON w.museum_id=m.museum_id
+GROUP BY m.name, w.style;
+
+
+ -- 17.) Identify the artists whose paintings are displayed in multiple countries
+WITH cte as(
+	SELECT DISTINCT a.full_name as artist, m.country, w.name as painting, m.name as museum_name
+	FROM artist as a
+	JOIN work as w ON a.artist_id=w.artist_id
+	JOIN museum as m ON w.museum_id=m.museum_id)
+SELECT artist, count (1) as no_of_countries
+FROM cte
+GROUP BY artist
+HAVING count(1) > 1
+ORDER BY 2 DESC;
+
+
 -- 18.) Display the country and the city with most no of museums. Output 2 seperate columns to mention the city and country. If there are multiple value, seperate them with comma.
 WITH cte_country as
 	(SELECT country, count(1) as country_count,
