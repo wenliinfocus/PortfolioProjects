@@ -44,6 +44,16 @@ GROUP BY cs.label, pd.sale_price
 ORDER BY MAX(pd.sale_price) DESC;
 
 
+-- 9.) Fetch the top 10 most famous painting subject
+SELECT TOP 10
+s.subject, count(1) as no_of_painting,
+RANK () OVER (ORDER BY count(1) DESC) as ranking
+from subject as s
+JOIN work as w
+ON s.work_id=w.work_id
+GROUP BY s.subject;
+
+
 -- 10.) Identify the museums which are open on both Sunday and Monday. Display museum name, city.
 SELECT m.name as museum_name, m.city
 from museum_hours mh1
@@ -52,6 +62,54 @@ WHERE day = 'Sunday'
 and exists (select 1 from museum_hours mh2
 			where mh2.museum_id = mh1.museum_id
 			and mh2.day = 'Monday');
+
+
+-- 11.) How many museums are open every single day?
+SELECT COUNT (1)
+FROM (
+	SELECT museum_id, count (1) as days_museum_open
+	FROM museum_hours
+	GROUP BY museum_id
+	HAVING count(1) = 7
+	) no_of_museums;
+
+
+-- 12.) Which are the top 5 most popular museum? (Popularity is defined based on most no of paintings in a museum)
+SELECT TOP 5 m.name, m.city, m.state
+FROM (
+	SELECT m.museum_id, count(1) as no_of_painting_in_museum,
+	RANK () OVER (ORDER BY count(1) DESC) as ranking
+	from work as w
+	JOIN museum as m
+	ON w.museum_id=m.museum_id
+	GROUP BY m.museum_id
+	) x
+	JOIN museum as m ON m.museum_id=x.museum_id;
+
+
+-- 13.)	Who are the top 5 most popular artist? (Popularity is defined based on most no of paintings done by an artist)
+SELECT TOP 5 a.full_name as artist, a.nationality, x.no_of_paintings
+FROM (
+	SELECT a.artist_id, count(1) as no_of_paintings,
+	RANK () OVER (ORDER BY count(1) DESC) as ranking
+	from artist as a
+	JOIN work as w
+	ON a.artist_id=w.artist_id
+	GROUP BY a.artist_id
+	) x
+	JOIN artist as a ON a.artist_id=x.artist_id;
+
+
+-- 14.) Display the 3 least popular canva sizes
+SELECT TOP 3 label, ranking, no_of_paintings
+FROM (
+	SELECT cs.size_id, cs.label, count(1) as no_of_paintings,
+	RANK () OVER (ORDER BY count(1) ASC) as ranking
+	FROM product_size as ps
+	JOIN work as w ON ps.work_id=w.work_id
+	JOIN canvas_size as cs ON ps.size_id=cs.size_id
+	GROUP BY cs.size_id, cs.label
+	) x;
 
 
 -- 15.) Which museum is open for the longest during a day. Dispay museum name, state and hours open and which day?
