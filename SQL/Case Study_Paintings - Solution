@@ -179,3 +179,59 @@ FROM cte_country
 CROSS JOIN cte_city
 WHERE cte_country.country_rank = 1
 AND cte_city.city_rank = 1;
+
+
+-- 19.) Identify the artist and the museum where the most expensive and least expensive painting is placed. Display the artist name, sale_price, painting name, museum name, museum city and canvas label
+WITH cte as
+	(SELECT *,
+	RANK () OVER (ORDER BY ps.sale_price DESC) as ranking,
+	RANK () OVER (ORDER BY ps.sale_price ) as ranking_asc
+	FROM product_size as ps)
+SELECT a.full_name, cte.sale_price, w.name as painting_name, m.name as museum_name, m.city, cs.label as canvas_label
+FROM cte
+JOIN work as w ON cte.work_id=w.work_id
+JOIN museum as m ON w.museum_id=m.museum_id
+JOIN artist as a ON w.artist_id=a.artist_id
+JOIN canvas_size as cs ON cte.size_id=cs.size_id
+WHERE ranking=1 or ranking_asc=1;
+
+
+-- 20.) Which country has the 5th highest no of paintings?
+WITH cte as
+	(SELECT m.country, count(1) as no_of_painting,
+	RANK () OVER (ORDER BY count(1) DESC) as ranking
+	FROM work as w
+	JOIN museum as m ON m.museum_id=w.museum_id
+	GROUP BY m.country)
+SELECT country, no_of_painting
+FROM cte
+WHERE cte.ranking=5;
+
+
+-- 21.) Which are the 3 most popular and 3 least popular painting styles?
+WITH cte as
+	(SELECT w.style, count(1) as no_of_painting,
+	RANK () OVER (ORDER BY count(1) DESC) as ranking,
+	count(1) OVER() as no_of_records
+	FROM work as w
+	WHERE w.style is NOT NULL
+	GROUP BY w.style)
+SELECT style,
+case when ranking <= 3 then 'Most Popular' else 'Least Popular' end as remarks
+FROM cte
+WHERE ranking <= 3
+or ranking > no_of_records - 3;
+
+
+-- 22.) Which artist has the most no of Portraits paintings outside USA?. Display artist name, no of paintings and the artist nationality.
+SELECT full_name as artist_name, nationality as nationality, no_of_paintings
+FROM
+	(SELECT a.full_name, a.nationality, count(1) as no_of_paintings,
+	RANK () OVER (ORDER BY count(1) DESC) as ranking
+	FROM work as w
+	JOIN artist as a ON w.artist_id=a.artist_id
+	JOIN museum as m ON w.museum_id=m.museum_id
+	JOIN subject as s ON w.work_id=s.work_id
+	WHERE subject = 'Portraits' and country != 'USA'
+	GROUP BY a.full_name, a.nationality) x
+WHERE ranking = 1;
