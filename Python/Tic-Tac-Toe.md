@@ -1,8 +1,8 @@
-Scenario
+## **Scenario**
 
 Your task is to write a simple program which pretends to play tic-tac-toe with the user. To make it all easier for you, we've decided to simplify the game. Here are our assumptions:
 
-•	the computer (i.e., your program) should play the game using `X`s;
+- the computer (i.e., your program) should play the game using `X`s;
 •	the user (e.g., you) should play the game using `O`s;
 •	the first move belongs to the computer − it always puts its first `X` in the middle of the board;
 •	all the squares are numbered row by row starting with `1` (see the example session below for reference)
